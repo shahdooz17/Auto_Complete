@@ -1,95 +1,97 @@
 # Auto Filling Bilingual Autocomplete App
 
-This project implements a bilingual (Arabic and English) autocomplete system that provides suggestions based on user input. The system uses a combination of Natural Language Processing (NLP) models to predict the next word(s) in a given input. The application is built with `CustomTkinter` for the GUI and uses various algorithms like n-grams and BERT-based models to generate the suggestions.
+This project implements a bilingual (Arabic and English) autocomplete system that provides suggestions based on user input. The system uses a combination of Natural Language Processing (NLP) models to predict the next word(s) in a given input. The application is built with `CustomTkinter` for the GUI and uses algorithms like n-grams and a fine-tuned BERT model for Arabic autocomplete.
 
 ## Project Structure
 
-```autocomplete_app/
+```bash
+autocomplete_app/
 ├── data/
-│ ├── extract.py # Extracts the first column from CSV and saves it to a text file
-│ └── arabic_data_cleaned.txt # Cleaned Arabic data used for generating autocomplete suggestions
-├── AutoFillingGeneral.py/
-├── main.py # Main script to run the app
+│   ├── extract.py                # Extracts the first column from CSV and saves it to a text file
+│   └── arabic_data_cleaned.txt   # Cleaned Arabic data used for generating autocomplete suggestions
+├── AutoFillingGeneral.py         # Core model and logic
+├── main.py                       # Main script to run the app `
+├── evaluate.py                       # Main script to run the app `
 ```
 
-## How to Run the Project
+How to Run the Project
+----------------------
 
-1. **Install Dependencies:**
-   
-   First, install all necessary Python dependencies:
+1.  **Install Dependencies:**
+
+    Install all necessary Python dependencies:
 
 
-## How to Run the Project
+    `pip install -r requirements.txt`
 
-1. **Install Dependencies:**
-   
-   First, install all necessary Python dependencies:
+2.  **Prepare the Data:**
 
-2. **Prepare the Data:**
+    Run `data/extract.py` to process the input dataset and extract the first column. It saves the cleaned Arabic data into `arabic_data_cleaned.txt`. Ensure that the correct CSV file path is set in the script.
 
-    The data/extract.py script processes the input dataset and extracts the first column. It saves the cleaned Arabic data into arabic_data_cleaned.txt. Ensure that the appropriate CSV file path is provided in the script before running.
+3.  **Run the App:**
 
-3. **Run the App:**
 
-    After the data is prepared, you can run the project using the following command:
+    `python main.py`
 
-    ```python main.py```
-This will launch the application, and you can start typing to receive autocomplete suggestions
+    This will launch the application. Start typing to receive autocomplete suggestions.
 
 Data
 ----
 
-The project uses two primary datasets for Arabic and English data:
+The project uses two primary datasets for Arabic and English:
 
 -   **Arabic Data**:
 
-    -   The data for Arabic text is cleaned and stored in the `data/arabic_data_cleaned.txt` file.
+    -   Cleaned and stored in `data/arabic_data_cleaned.txt`.
 
-    -   The dataset is derived from Kaggle's [Arabic Text Classification Dataset](https://www.kaggle.com/datasets/saurabhshahane/arabic-classification).
+    -   Sourced from Kaggle: [Arabic Classification Dataset](https://www.kaggle.com/datasets/saurabhshahane/arabic-classification).
 
 -   **English Data**:
 
-    -   The English dataset used for generating autocomplete suggestions is obtained from [English Corpus](https://www.english-corpora.org/).
+    -   Sourced from: [English Corpora](https://www.english-corpora.org/).
 
 NLP Models
 ----------
 
 ### N-Grams
 
-N-grams are used for predicting the next word(s) in a sequence. The following models are used in the project:
+Used for predicting the next word(s):
 
--   **Bigrams**: Used when there is only one word in the input.
+-   **Bigram**: For single-word inputs.
 
--   **Trigrams**: Used when there are multiple words in the input.
+-   **Trigram**: For multiple-word inputs.
 
-These models are trained on the provided datasets (Arabic and English) to suggest the most likely next words.
+Both Arabic and English n-gram models are trained on their respective datasets.
 
+### GPT 2 (Arabic)
+
+We fine-tuned a pre-trained Arabic gpt 2 model from Hugging Face to generate context-aware suggestions:
+
+🔗 [asafaya/bert-base-arabic on Hugging Face](https://huggingface.co/akhooli/gpt2-small-arabic-poetry)
 
 GUI
 ---
 
-The app uses the `CustomTkinter` library to provide a modern and user-friendly interface. It consists of:
+Built using `CustomTkinter`, offering:
 
--   An input field where the user can type text.
+-   A text input field.
 
--   A listbox that shows the suggested next words based on the input.
+-   A dynamic suggestion box with word predictions.
 
--   Arrow keys to navigate through the suggestions and `Enter` to select a suggestion.
+-   Keyboard navigation (arrow keys + Enter).
 
-The GUI is responsive and changes based on the input type (Arabic or English).
+-   Auto-detection of Arabic vs. English input.
 
 Features
 --------
 
--   Bilingual (Arabic and English) autocomplete.
+-   Bilingual autocomplete (Arabic and English).
 
--   Suggests the next word(s) based on n-gram models or BERT for Arabic.
+-   Combines n-grams and GPT-2 for prediction.
 
--   Uses n-grams for both English and Arabic text input.
+-   Clean and responsive GUI.
 
--   Modern GUI built with `CustomTkinter`.
-
--   Arrow key navigation for suggestions.
+-   Easy navigation and word selection.
 
 Requirements
 ------------
@@ -98,8 +100,6 @@ Requirements
 
 -   `tkinter`
 
-
-
 -   `numpy`
 
 -   `pandas`
@@ -107,3 +107,9 @@ Requirements
 -   `nltk`
 
 -   `scikit-learn`
+
+Presentation
+------------
+
+📊 View the detailed project presentation:\
+[Canva Slide Deck](https://www.canva.com/design/DAGm6Q3ODIA/bszklmxk92H-Fcu-0VWkYQ/edit?utm_content=DAGm6Q3ODIA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)

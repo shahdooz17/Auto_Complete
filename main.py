@@ -1,20 +1,23 @@
 import nltk
 import re
 from tkinter import *
-
+from evaluation import split_dataset, evaluate_trigram_model
+import sys
 import customtkinter as ctk 
 from AutoFillingGeneral import AutoFilling as generalAF  
+import time
 nltk.download('punkt_tab')
 nltk.download('punkt')
 nltk.download('wordnet')
 nltk.download('omw-1.4')
+sys.stdout.reconfigure(encoding='utf-8')
 
-
-# Reading the dataset from one file contains all text files (English & Arabic)
 def read_corpus(file_path):
+    start = time.time()
     file = open(file_path, 'r', encoding="utf-8")
     corpus_ = file.read()
     file.close()
+    print(f"Reading corpus took {time.time() - start:.2f} seconds")
     return corpus_
 
 
@@ -27,70 +30,62 @@ class AutoFilling:
 
     # Tokenization process for text
     def tokenize(self):
+        start = time.time()
         print('Tokenization process running now.')
-        self.text = re.sub(r'/W', '', self.text)
+        self.text = re.sub(r'\s+', ' ', self.text)  # Replace multiple spaces with a single space
+        self.text = re.sub(r'[^\w\s]', '', self.text)  # Remove non-alphanumeric characters except spaces
         self.tokens = nltk.word_tokenize(self.text)
+        print(f"Tokenization took {time.time() - start:.2f} seconds")
 
     # Generate all trigrams and count each word after it
     def generate_trigrams(self):
+        start = time.time()
+        print('Generating trigrams process running now.')
         if len(self.tokens) > 0:
-            print('generating trigrams process running now.')
-            for i in range(len(self.tokens)-2):  # take 2 words
+            for i in range(len(self.tokens)-2):  # Take 2 words
                 seq_list = self.tokens[i:i+2]
-                seq = ""
-                for word in seq_list:
-                    seq += word
-                    seq += " "
-                seq = seq.strip()
+                seq = " ".join(seq_list)
 
-                # map each 2 words with frequency of third word
+                # Map each 2 words with frequency of the third word
                 if seq in self.trigrams:
                     self.trigrams[seq][self.tokens[i + 2]] = self.trigrams[seq].get(self.tokens[i + 2], 0) + 1
                 else:
                     self.trigrams[seq] = {}
                     self.trigrams[seq][self.tokens[i + 2]] = 1
 
-        # in case of calling this function without tokenization
         else:
-            print('You should tokenize the text first! tokenization process running now.')
+            print('You should tokenize the text first! Tokenization process running now.')
             self.tokenize()
             self.generate_trigrams()
+        print(f"Generating trigrams took {time.time() - start:.2f} seconds")
 
     # Calculate the probability of each trigram
     def calculate_prob(self):
-        if len(self.trigrams) > 0:
-            print('probability calculations process running now.')
-            for prev_seq in self.trigrams:
-                total_prev_cnt = 0.0
-                for key in self.trigrams[prev_seq].keys():
-                    total_prev_cnt += self.trigrams[prev_seq][key]
-
-                for key in self.trigrams[prev_seq].keys():
-                    self.trigrams[prev_seq][key] /= total_prev_cnt
-                self.trigrams[prev_seq] = sorted(self.trigrams[prev_seq].items(), key=lambda x: (x[1], x[0]),
-                                                 reverse=True)
-
-        # in case of Trigrams not Generated yet!
-        else:
-            print('You should generating trigrams first!')
+        start = time.time()
+        if not self.trigrams:  # Check if trigrams are empty
+            print('Trigrams not generated yet, generating now.')
             self.generate_trigrams()
-            self.calculate_prob()
+        
+        print('Calculating probabilities now.')
+        for prev_seq in self.trigrams:
+            total_prev_cnt = sum(self.trigrams[prev_seq].values())
+            for key in self.trigrams[prev_seq]:
+                self.trigrams[prev_seq][key] /= total_prev_cnt
+            self.trigrams[prev_seq] = sorted(self.trigrams[prev_seq].items(), key=lambda x: (x[1], x[0]), reverse=True)
+        print(f"Calculating probabilities took {time.time() - start:.2f} seconds")
 
-    # take input and suggest next word after it
+    # Take input and suggest the next word after it
     def suggest_next_trigrams(self, str_input):
         res = []
-        str_input.strip()
+        str_input = str_input.strip()
         list_input = str_input.split(" ")
         if len(list_input) >= 2:
             last_2_words = (list_input[-2] + " " + list_input[-1])
             if last_2_words in self.trigrams:
-                for i in range(len(self.trigrams[last_2_words])):
-                    predicted = self.trigrams[last_2_words][i]
-                    res.append(predicted[0])
-                    if i == 9:  # to limit number of suggestions
+                for predicted_word, freq in self.trigrams[last_2_words]:
+                    res.append(predicted_word)
+                    if len(res) == 10:  # Limit number of suggestions
                         break
-        else:
-            pass
         return res
 
 
@@ -112,17 +107,28 @@ AutoFillingObjBi.calculate_probabilities()  # Use this method for bigrams
 
 
 # Reading Arabic dataset (Extra)
-corpusAr = read_corpus('data/half_cleaned_first_column.txt')  # this file contains 2 million words from 6499 articles
+corpusAr = read_corpus('data/arabic_cleaned_data.txt')  # this file contains 2 million words from 6499 articles
 
+train_text_ar, test_tokens_ar = split_dataset(corpusAr)
+
+
+# Train the Trigram model
 AutoFillingObjAr = AutoFilling(corpusAr)  # Generate Trigrams
 AutoFillingObjAr.tokenize()
 AutoFillingObjAr.generate_trigrams()
 AutoFillingObjAr.calculate_prob()
 
+# Train the Bigram model
 AutoFillingObjArBi = generalAF(corpusAr, 2)  # Generate Bigrams
 AutoFillingObjArBi.tokenize()
 AutoFillingObjArBi.generate_ngrams()
 AutoFillingObjArBi.calculate_probabilities()
+
+# Evaluation of the Arabic Trigram model
+precision_ar, mrr_ar = evaluate_trigram_model(AutoFillingObjAr, test_tokens_ar, k=3)
+
+# Output the evaluation metrics for Trigram Model
+print(f"Arabic Trigram Evaluation:\nPrecision@3: {precision_ar:.3f} | MRR: {mrr_ar:.3f}")
 
 # --------------------------------GUI------------------------------------------
 

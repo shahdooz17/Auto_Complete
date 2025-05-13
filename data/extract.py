@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Load your CSV file
-df = pd.read_csv("path/to/your_dataset.csv")
+df = pd.read_csv("data/arabic_dataset_classifiction.csv")
 
 # Drop rows with nulls in any column
 df_cleaned = df.dropna()
